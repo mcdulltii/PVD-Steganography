@@ -245,7 +245,7 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
     // Initialise
     int pad = 0;
     int nb = diff;
-    printf("%d %ld\n", nb, strlen(bits));
+    // printf("%d %ld\n", nb, strlen(bits));
 
     // If the number of bits required is less than the number of bits in the data(char.) to be Embedded
     if (nb < strlen(bits)) {
@@ -265,7 +265,7 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
         } else {
             strcpy(newbival, bival);
         }
-        printf("less %s %s %s %s %s\n", bits, newbits, data, bival, newbival);
+        // printf("less %s %s %s %s %s\n", bits, newbits, data, bival, newbival);
 
         // Write data to log File for extraction
         fprintf(lg, "%d %d %c %d %d %d \n", i, j, pixel, diff, pad, charNum+1);
@@ -297,7 +297,7 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
         } else {
             strcpy(newbival, bival);
         }
-        printf("more %s %s %s %s %s %d\n", bits, newbits, data, bival, newbival, pad);
+        // printf("more %s %s %s %s %s %d\n", bits, newbits, data, bival, newbival, pad);
         count += 1;
 
         // Write data to log File for extraction
@@ -589,6 +589,7 @@ restart:
     }
 
     // Get input string to be obfuscated
+    puts("Enter string input for PVD obfuscation");
     if (!fgets(input, 1023, stdin)) exit(0);
 
     // Convert first char to binary string
