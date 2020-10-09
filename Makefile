@@ -5,7 +5,7 @@ CFLAGS = -lpng -lm
 CSECURE = -O1 -D_FORTIFY_SOURCE=3 -D_GLIBCXX_ASSERTIONS -fasynchronous-unwind-tables -fexceptions -fpie -fpic -Wl,-z,relro -Wl,-z,now -z defs -fcf-protection
 FILENAME = embed
 
-all: gcc run open
+all: gcc run verify
 
 icc:
 		$(INTEL) -o $(FILENAME) $(FILENAME).c $(CFLAGS)
@@ -36,3 +36,7 @@ run:
 
 open:
 		xdg-open embedded.png; xdg-open output.png
+
+verify:
+		python3 extract.py embedded.png text
+		cat text

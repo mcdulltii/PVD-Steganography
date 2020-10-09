@@ -7,7 +7,7 @@ __status__ = "Production"
 """
 ***********************************************************************
 
-Usage: python3 pvdExtract.py <Embedded Cover Image File> <Output File> 
+Usage: python3 pvdExtract.py <Embedded Cover Image File> <Output File>
 Ex:    python3 pvdExtract.py protest.png cipher
 
 ***********************************************************************
@@ -25,6 +25,14 @@ lg = open("embedlog.log", "r")
 pix = im.load()
 temp = 1
 chrtr = ""
+
+# Ensure binary value is minimally 0bXX
+def checkbin(bin_val):
+    assert bin_val[:2] == '0b'
+    if len(bin_val) == 3:
+        tmp = '0b0' + bin_val[2]
+        return tmp
+    return bin_val
 
 # Main Function
 def main():
@@ -60,17 +68,17 @@ def main():
 
         # If embedded pixel is red
         if pixel == "r":
-            binr = bin(r)
+            binr = checkbin(bin(r))
             chrtr += binr[(len(binr) - diff) :]
 
         # If embedded pixel is green
         if pixel == "g":
-            binr = bin(g)
+            binr = checkbin(bin(g))
             chrtr += binr[(len(binr) - diff) :]
 
         # If embedded pixel is blue
         if pixel == "b":
-            binr = bin(b)
+            binr = checkbin(bin(b))
             chrtr += binr[(len(binr) - diff) :]
 
         # Unpad if padding is done
