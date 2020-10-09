@@ -33,7 +33,7 @@ int charNum = 0;
 int count = 0;
 char *paddbits = "0000000";
 char *bits = "";
-char input[1024];
+char *input;
 
 /* Given "bitmap", this returns the pixel of bitmap at the point 
    ("x", "y"). */
@@ -152,7 +152,7 @@ static int pix (int value, int max)
 // Obtain substring from string wrt index
 
 char *substr(char const *input, size_t start, size_t len) { 
-    char *ret = malloc(len+1);
+    char *ret = calloc(8, len+1);
     memcpy(ret, input+start, len);
     ret[len]  = '\0';
     return ret;
@@ -161,7 +161,7 @@ char *substr(char const *input, size_t start, size_t len) {
 // Converts char to a binary string
 
 char* chartobin ( char c ) {
-    char *temp = (char*)malloc(sizeof(char*));
+    char *temp = (char*)calloc(8, sizeof(char*));
     int index = 0;
     for (int i = 7; i >= 0; --i) {
         temp[7-i] = ( (c & (1 << i)) ? '1' : '0');
@@ -261,7 +261,6 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
             char *tmp = substr(bival,0,(strlen(bival) - strlen(data)));
             strcat(tmp, data);
             strcpy(newbival, tmp);
-            free(tmp);
         } else {
             strcpy(newbival, bival);
         }
@@ -272,9 +271,6 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
 
         // Return new pixel value after embedding
         int c = bintochar(newbival);
-
-        free(newbits);
-
         return (c<0) ? 256 - c : c;
     } else {
     // If the number of bits required is greater than the number of bits in the data(char.) to be Embedded
@@ -293,7 +289,6 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
             char *tmp = substr(bival,0,(strlen(bival) - strlen(data)));
             strcat(tmp, data);
             strcpy(newbival, tmp);
-            free(tmp);
         } else {
             strcpy(newbival, bival);
         }
@@ -554,6 +549,7 @@ int main() {
     // Initialisation
     bitmap_t output;
     int dimensions = 800;
+    input = (char*)calloc(2048, sizeof(char*));
 
     // Create an image
     output.width = dimensions;
@@ -589,8 +585,8 @@ restart:
     }
 
     // Get input string to be obfuscated
-    puts("Enter string input for PVD obfuscation");
-    if (!fgets(input, 1023, stdin)) exit(0);
+    puts("Enter string input for PVD obfuscation:");
+    if (!fgets(input, 2048, stdin)) exit(0);
 
     // Convert first char to binary string
     char binval = input[0];
