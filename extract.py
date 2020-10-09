@@ -1,99 +1,67 @@
-__author__ = "Tony Josi"
-__license__ = "MIT"
-__email__ = "tonyjosi.mec@gmail.com"
-__status__ = "Production"
-
-
-"""
-***********************************************************************
-
-Usage: python3 pvdExtract.py <Embedded Cover Image File> <Output File>
-Ex:    python3 pvdExtract.py protest.png cipher
-
-***********************************************************************
-"""
-
 from PIL import Image
 import sys, os
 
-# File Objects creation
-im = Image.open(sys.argv[1])
-outp = open(sys.argv[2], "w")
-lg = open("embedlog.log", "r")
 
-# Initialisation
-pix = im.load()
-temp = 1
-chrtr = ""
-
-# Ensure binary value is minimally 0bXX
-def checkbin(bin_val):
-    assert bin_val[:2] == '0b'
-    if len(bin_val) == 3:
-        tmp = '0b0' + bin_val[2]
-        return tmp
-    return bin_val
-
-# Main Function
 def main():
-    global chrtr, temp
-    while True:
+    # File Object Creations
+    im = Image.open(sys.argv[1])
+    outp = open(sys.argv[2],'w')
+    lg = open('embedlog.log','r')
 
+    # Initialisation
+    pix = im.load()
+    temp = 1
+    chrtr = ''
+
+    while 1:
         # Read each line from log file
         st = lg.readline()
 
         # Check if log file reached its end
         if len(st) == 0:
             # Write extracted data to file
-            # print(chr(int(chrtr, 2)))
             outp.write(chr(int(chrtr, 2)))
             break
 
         # Unpack line read from log file to variables
-        i, j, pixel, diff, pad, charNum = st.split()
-
         # Process variables
-        i = int(i)
-        j = int(j)
-        diff = int(diff)
-        pad = int(pad)
-        charNum = int(charNum)
+        i, j, pixel, diff, pad, charNum = [int(i) if i not in 'rgb' else i for i in st.split()]
         r, g, b = pix[i, j]
 
-        # Check if a new character in embed log is reached
+        # Check if new charaacter in embed log is reached
         if temp != charNum:
-            # print(chr(int(chrtr, 2)), end="")
             outp.write(chr(int(chrtr, 2)))
-            chrtr = ""
+            chrtr = ''
 
-        # If embedded pixel is red
-        if pixel == "r":
-            binr = checkbin(bin(r))
-            chrtr += binr[(len(binr) - diff) :]
+        # Red pixel
+        if pixel == 'r':
+            binr = bin(r)
 
-        # If embedded pixel is green
-        if pixel == "g":
-            binr = checkbin(bin(g))
-            chrtr += binr[(len(binr) - diff) :]
+        # Green pixel
+        elif pixel == 'g':
+            binr = bin(g)
 
-        # If embedded pixel is blue
-        if pixel == "b":
-            binr = checkbin(bin(b))
-            chrtr += binr[(len(binr) - diff) :]
+        # Blue pixel
+        elif pixel == 'b':
+            binr = bin(b)
+
+        chrtr += binr[(len(binr) - diff) :]
 
         # Unpad if padding is done
         if pad != 0:
             chrtr = chrtr[: (len(chrtr) - pad)]
 
-        # For checking if character has changed in embed file
+        # Check if character has changed in embed file
         temp = charNum
 
-    # Close file objects
+    # Close File Objects
     outp.close()
     lg.close()
-    print("Extracting to the file:", sys.argv[2])
-    print("Extraction completed...  Exiting!")
+    print("Extracted to {}. Now exiting!".format(sys.argv[2]))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        print("Usage: python3 extract.py embedded.png <Output file>")
+        sys.exit()
     main()
