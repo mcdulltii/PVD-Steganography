@@ -262,7 +262,7 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
             strcat(tmp, data);
             strcpy(newbival, tmp);
         } else {
-            strcpy(newbival, bival);
+            strcpy(newbival, data);
         }
         // printf("less %s %s %s %s %s\n", bits, newbits, data, bival, newbival);
 
@@ -290,7 +290,7 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
             strcat(tmp, data);
             strcpy(newbival, tmp);
         } else {
-            strcpy(newbival, bival);
+            strcpy(newbival, data);
         }
         // printf("more %s %s %s %s %s %d\n", bits, newbits, data, bival, newbival, pad);
         count += 1;

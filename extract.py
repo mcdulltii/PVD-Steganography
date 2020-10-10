@@ -2,6 +2,14 @@ from PIL import Image
 import sys, os
 
 
+# Ensure binary strings are at least 0bXX
+def checkbin(bin_val):
+    assert bin_val[:2] == '0b'
+    if len(bin_val) == 3:
+        return bin_val[:2] + '0' + bin_val[2]
+    return bin_val
+
+
 def main():
     # File Object Creations
     im = Image.open(sys.argv[1])
@@ -35,17 +43,22 @@ def main():
 
         # Red pixel
         if pixel == 'r':
-            binr = bin(r)
+            binr = checkbin(bin(r))
 
         # Green pixel
         elif pixel == 'g':
-            binr = bin(g)
+            binr = checkbin(bin(g))
 
         # Blue pixel
         elif pixel == 'b':
-            binr = bin(b)
+            binr = checkbin(bin(b))
+
+        # Check if binary value is stripped
+        if len(binr[2:]) < diff:
+            binr = binr[:2] + '0'*(diff - len(binr[2:])) + binr[2:]
 
         chrtr += binr[(len(binr) - diff) :]
+        # print(binr, chrtr)
 
         # Unpad if padding is done
         if pad != 0:
