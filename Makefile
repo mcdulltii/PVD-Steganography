@@ -1,8 +1,8 @@
 GNU = gcc
 INTEL = icc
 CSTRIP = -s
-CFLAGS = -lpng -lm
-CSECURE = -O1 -D_FORTIFY_SOURCE=3 -D_GLIBCXX_ASSERTIONS -fasynchronous-unwind-tables -fexceptions -fpie -fpic -Wl,-z,relro -Wl,-z,now -z defs -fcf-protection
+CFLAGS = -lpng -lm -fopenmp
+CSECURE = -O1 -D_GLIBCXX_ASSERTIONS -fasynchronous-unwind-tables -fexceptions -fpie -fpic -Wl,-z,relro -Wl,-z,now -z defs -fcf-protection
 FILENAME = embed
 
 all: gcc run verify

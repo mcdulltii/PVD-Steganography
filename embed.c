@@ -204,6 +204,7 @@ int calcCapacity(int capacity, int lix, int liy, bitmap_t output) {
     int r, g, b, rref, gref, bref, rdif, gdif, bdif;
 
     // Divide pixels to [3 x 3] matrix
+#pragma omp parallel for
     for (int i=0; i < lix * 3; i+=3) {
         for (int j=0; j < liy * 3; j+=3) {
             // Obtain pixel values of ref. pixel
@@ -343,6 +344,7 @@ bitmap_t antialias(bitmap_t temp) {
     // Check if edge case
     int is_edge = 0;
 
+#pragma omp parallel for
     for (int x = 0; x < output.width; x++) {
         for (int y = 0; y < output.height; y++) {
             // Solve for edge cases
@@ -395,6 +397,7 @@ bitmap_t fractal(bitmap_t output, int choice) {
     ic = rand()%4-2;
     id = rand()%4-2;
 
+#pragma omp parallel for
     for (x = 0; x < output.width; x++) {
         for (y = 0; y < output.height; y++) {
             ia = ias[y];
@@ -543,6 +546,75 @@ int verify(bitmap_t output) {
     return 0;
 }
 
+// Handle embedding pixels using PVD
+int handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *fptr, int embedded) {
+    int r, g, b, rdif, gdif, bdif;
+    int newr, newg, newb;
+
+    // For all pixels in the matrix
+    for (int k=i; k<i+3; k++) {
+        if (k >= output.height) break;
+        for (int l=j; l<j+3; l++) {
+            if (k == i+1 && l == j+1) continue;
+            if (l >= output.width) break;
+
+            // Calculate the difference in pixel values
+            pixel_t * pixel = pixel_at (& output, k, l);
+            r = pixel->red;
+            g = pixel->green;
+            b = pixel->blue;
+            rdif = abs(r - rref);
+            gdif = abs(g - gref);
+            bdif = abs(b - bref);
+            // printf("%d %d %d, %d %d %d\n", r, g, b, rdif, gdif, bdif);
+
+            // Till embedding gets completed
+            if (!completed) {
+                newr = embedbits(k, l, 'r', classify(rdif), r, fptr);
+            }
+            if (!completed) {
+                newg = embedbits(k, l, 'g', classify(gdif), g, fptr);
+            }
+            if (!completed) {
+                newb = embedbits(k, l, 'b', classify(bdif), b, fptr);
+            }
+            // printf("%d %d %d, %d %d %d, [%d, %d]\n", r, g, b, newr, newg, newb, k, l);
+
+            // Embedding completed
+            if (completed) {
+                // Assign modified pixel values
+                pixel->red = newr;
+                pixel->green = newg;
+                pixel->blue = newb;
+
+                // Save embedded image
+                if (save_png_to_file (& output, "embedded.png")) {
+                    fprintf (stderr, "Error writing file.\n");
+                    exit(0);
+                }
+
+                // Close log file
+                fclose(fptr);
+                printf("Embedded: %d bits\n", embedded);
+
+                // Exit program
+                puts("Original image outputted to ./output.png");
+                puts("Embedded image outputted to ./embedded.png");
+                exit(0);
+            }
+
+            // Calculate the number of bits embedded
+            embedded += classify(rdif) + classify(gdif) + classify(bdif);
+
+            // Assign modified pixel values
+            pixel->red = newr;
+            pixel->green = newg;
+            pixel->blue = newb;
+        }
+    }
+    return embedded;
+}
+
 int main() {
     srand(time(NULL));
 
@@ -603,16 +675,16 @@ restart:
     int lix = floor((float)output.height/3);
     int liy = floor((float)output.width/3);
 
-    // Initialise counter containing num of bits embedded till embedding ends
-    int embedded = 0;
-
     // Print total Embedding capacity
     printf("Total Embd. Capacity: %d\n", calcCapacity(capacity, lix, liy, output));
 
-    int r, g, b, rref, gref, bref, rdif, gdif, bdif;
-    int newr, newg, newb;
+    // Initialise counter containing num of bits embedded till embedding ends
+    int embedded = 0;
+
+    int rref, gref, bref;
 
     // Divide pixels to [3 x 3] matrix
+#pragma omp parallel for
     for (int i=0; i < lix*3; i+=3) {
         for (int j=0; j < liy*3; j+=3) {
             // Obtain pixel values of ref. pixel
@@ -622,67 +694,9 @@ restart:
             bref = pixelref->blue;
             // printf("%d %d %d\n", rref, gref, bref);
 
-            // For all pixels in the matrix
-            for (int k=i; k<i+3; k++) {
-                if (k >= output.height) break;
-                for (int l=j; l<j+3; l++) {
-                    if (k == i+1 && l == j+1) continue;
-                    if (l >= output.width) break;
-
-                    // Calculate the difference in pixel values
-                    pixel_t * pixel = pixel_at (& output, k, l);
-                    r = pixel->red;
-                    g = pixel->green;
-                    b = pixel->blue;
-                    rdif = abs(r - rref);
-                    gdif = abs(g - gref);
-                    bdif = abs(b - bref);
-                    // printf("%d %d %d, %d %d %d\n", r, g, b, rdif, gdif, bdif);
-
-                    // Till embedding gets completed
-                    if (!completed) {
-                        newr = embedbits(k, l, 'r', classify(rdif), r, fptr);
-                    }
-                    if (!completed) {
-                        newg = embedbits(k, l, 'g', classify(gdif), g, fptr);
-                    }
-                    if (!completed) {
-                        newb = embedbits(k, l, 'b', classify(bdif), b, fptr);
-                    }
-                    // printf("%d %d %d, %d %d %d, [%d, %d]\n", r, g, b, newr, newg, newb, k, l);
-
-                    // Embedding completed
-                    if (completed) {
-                        // Assign modified pixel values
-                        pixel->red = newr;
-                        pixel->green = newg;
-                        pixel->blue = newb;
-
-                        // Save embedded image
-                        if (save_png_to_file (& output, "embedded.png")) {
-                            fprintf (stderr, "Error writing file.\n");
-                            return -1;
-                        }
-
-                        // Close log file
-                        fclose(fptr);
-                        printf("Embedded: %d bits\n", embedded);
-
-                        // Exit program
-                        puts("Original image outputted to ./output.png");
-                        puts("Embedded image outputted to ./embedded.png");
-                        return 0;
-                    }
-
-                    // Calculate the number of bits embedded
-                    embedded += classify(rdif) + classify(gdif) + classify(bdif);
-
-                    // Assign modified pixel values
-                    pixel->red = newr;
-                    pixel->green = newg;
-                    pixel->blue = newb;
-                }
-            }
+            // Embed bits with input string
+#pragma omp critical
+            embedded += handle(i, j, output, rref, gref, bref, fptr, embedded);
         }
     }
 
