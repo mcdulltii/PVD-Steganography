@@ -344,7 +344,7 @@ bitmap_t antialias(bitmap_t temp) {
     // Check if edge case
     int is_edge = 0;
 
-#pragma omp parallel for
+#pragma omp parallel for private(is_edge)
     for (int x = 0; x < output.width; x++) {
         for (int y = 0; y < output.height; y++) {
             // Solve for edge cases
@@ -354,11 +354,14 @@ bitmap_t antialias(bitmap_t temp) {
             pixel_t * pixelym = (y==0) ? black : pixel_at (& temp, x, y-1);
             pixel_t * pixel = pixel_at (& output, x, y);
             // Average for edge cases
-            if (x==output.width-1||x==0||y==output.height-1||y==0) is_edge = 1;
-            pixel->red = (pixelxp->red + pixelxm->red + pixelyp->red + pixelym->red)/((is_edge) ? 3 : 4);
-            pixel->blue = (pixelxp->blue + pixelxm->blue + pixelyp->blue + pixelym->blue)/((is_edge) ? 3 : 4);
-            pixel->green = (pixelxp->green + pixelxm->green + pixelyp->green + pixelym->green)/((is_edge) ? 3 : 4);
-            is_edge = 0;
+#pragma omp critical
+            {
+                if (x==output.width-1||x==0||y==output.height-1||y==0) is_edge = 1;
+                pixel->red = (pixelxp->red + pixelxm->red + pixelyp->red + pixelym->red)/((is_edge) ? 3 : 4);
+                pixel->blue = (pixelxp->blue + pixelxm->blue + pixelyp->blue + pixelym->blue)/((is_edge) ? 3 : 4);
+                pixel->green = (pixelxp->green + pixelxm->green + pixelyp->green + pixelym->green)/((is_edge) ? 3 : 4);
+                is_edge = 0;
+            }
         }
     }
 
@@ -397,7 +400,6 @@ bitmap_t fractal(bitmap_t output, int choice) {
     ic = rand()%4-2;
     id = rand()%4-2;
 
-#pragma omp parallel for
     for (x = 0; x < output.width; x++) {
         for (y = 0; y < output.height; y++) {
             ia = ias[y];
@@ -547,7 +549,7 @@ int verify(bitmap_t output) {
 }
 
 // Handle embedding pixels using PVD
-int handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *fptr, int embedded) {
+void handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *fptr) {
     int r, g, b, rdif, gdif, bdif;
     int newr, newg, newb;
 
@@ -595,7 +597,6 @@ int handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *fp
 
                 // Close log file
                 fclose(fptr);
-                printf("Embedded: %d bits\n", embedded);
 
                 // Exit program
                 puts("Original image outputted to ./output.png");
@@ -603,16 +604,12 @@ int handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *fp
                 exit(0);
             }
 
-            // Calculate the number of bits embedded
-            embedded += classify(rdif) + classify(gdif) + classify(bdif);
-
             // Assign modified pixel values
             pixel->red = newr;
             pixel->green = newg;
             pixel->blue = newb;
         }
     }
-    return embedded;
 }
 
 int main() {
@@ -678,9 +675,6 @@ restart:
     // Print total Embedding capacity
     printf("Total Embd. Capacity: %d\n", calcCapacity(capacity, lix, liy, output));
 
-    // Initialise counter containing num of bits embedded till embedding ends
-    int embedded = 0;
-
     int rref, gref, bref;
 
     // Divide pixels to [3 x 3] matrix
@@ -696,7 +690,7 @@ restart:
 
             // Embed bits with input string
 #pragma omp critical
-            embedded += handle(i, j, output, rref, gref, bref, fptr, embedded);
+            handle(i, j, output, rref, gref, bref, fptr);
         }
     }
 
