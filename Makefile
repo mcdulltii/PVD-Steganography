@@ -10,19 +10,10 @@ TEXT = text
 all: gcc run verify
 
 icc:
-		$(INTEL) -o $(FILENAME) $(FILENAME).c $(CFLAGS)
-
-parallel-icc:
 		$(INTEL) -o $(FILENAME) $(FILENAME).c $(CFLAGS) $(CPARALLEL)
 
-secure-icc:
-		$(INTEL) -o $(FILENAME) $(FILENAME).c $(CFLAGS) $(CSECURE)
-
 strip-icc:
-		$(INTEL) -o $(FILENAME) $(FILENAME).c $(CSTRIP) $(CFLAGS)
-
-all-icc:
-		$(INTEL) -o $(FILENAME) $(FILENAME).c $(CSTRIP) $(CFLAGS) $(CSECURE)
+		$(INTEL) -o $(FILENAME) $(FILENAME).c $(CSTRIP) $(CFLAGS) $(CPARALLEL)
 
 gcc:
 		$(GNU) -o $(FILENAME) $(FILENAME).c $(CFLAGS)
@@ -31,13 +22,13 @@ parallel-gcc:
 		$(GNU) -o $(FILENAME) $(FILENAME).c $(CFLAGS) $(CPARALLEL)
 
 secure-gcc:
-		$(GNU) -o $(FILENAME) $(FILENAME).c $(CFLAGS) $(CSECURE)
+		$(GNU) -o $(FILENAME) $(FILENAME).c $(CFLAGS) $(CPARALLEL) $(CSECURE)
 
 strip-gcc:
-		$(GNU) -o $(FILENAME) $(FILENAME).c $(CSTRIP) $(CFLAGS)
+		$(GNU) -o $(FILENAME) $(FILENAME).c $(CSTRIP) $(CFLAGS) $(CPARALLEL)
 
 all-gcc:
-		$(GNU) -o $(FILENAME) $(FILENAME).c $(CSTRIP) $(CFLAGS) $(CSECURE)
+		$(GNU) -o $(FILENAME) $(FILENAME).c $(CSTRIP) $(CFLAGS) $(CSECURE) $(CPARALLEL)
 
 run:
 		./$(FILENAME) $(TEXT)
