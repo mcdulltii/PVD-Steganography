@@ -5,6 +5,7 @@ CFLAGS = -lpng -lm
 CPARALLEL = -fopenmp
 CSECURE = -O1 -D_GLIBCXX_ASSERTIONS -fasynchronous-unwind-tables -fexceptions -fpie -fpic -Wl,-z,relro -Wl,-z,now -z defs -fcf-protection
 FILENAME = embed
+TEXT = text
 
 all: gcc run verify
 
@@ -39,7 +40,7 @@ all-gcc:
 		$(GNU) -o $(FILENAME) $(FILENAME).c $(CSTRIP) $(CFLAGS) $(CSECURE)
 
 run:
-		./$(FILENAME)
+		./$(FILENAME) $(TEXT)
 
 open:
 		xdg-open embedded.png; xdg-open output.png
@@ -47,3 +48,6 @@ open:
 verify:
 		python3 extract.py embedded.png text
 		cat text
+
+clean: 
+		rm $(FILENAME) embedded.png output.png $(TEXT) embedlog.log

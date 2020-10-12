@@ -28,6 +28,8 @@ bitmap_t;
     
 /* Global Variables */
 
+#define FILE_SIZE 4096
+
 int completed = 0;
 int charNum = 0;
 int count = 0;
@@ -305,7 +307,7 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
         char binval = input[charNum];
 
         // Check if file containing data to embed reached its end
-        if (binval == '\x0a') {
+        if (binval == '\x00') {
             // Activate complete flag
             completed = 1;
 
@@ -612,13 +614,18 @@ void handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *f
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    // Check for cmdline argument
+    if (argc != 2) {
+        puts("Invalid arguments!");
+        return -1;
+    }
     srand(time(NULL));
 
     // Initialisation
     bitmap_t output;
     int dimensions = 800;
-    input = (char*)calloc(2048, sizeof(char*));
+    input = (char*)calloc(FILE_SIZE, sizeof(char*));
 
     // Create an image
     output.width = dimensions;
@@ -654,8 +661,19 @@ restart:
     }
 
     // Get input string to be obfuscated
-    puts("Enter string input for PVD obfuscation:");
-    if (!fgets(input, 2048, stdin)) exit(0);
+    FILE *fp;
+    fp = fopen(argv[1], "r");
+    if (fp == NULL) {
+        puts("Error!");
+        return -1;
+    }
+    char ch;
+    int cnt = 0;
+    while ((ch = fgetc(fp)) != EOF) {
+        input[cnt] = ch;
+        cnt++;
+    }
+    fclose(fp);
 
     // Convert first char to binary string
     char binval = input[0];
