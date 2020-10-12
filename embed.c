@@ -259,7 +259,6 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
         char *data = newbits;
         char *bival = chartobin(val);
         char newbival[8];
-        memset(newbival, '\0', sizeof(newbival));
         if (strlen(bival)>strlen(data)) {
             char *tmp = substr(bival,0,(strlen(bival) - strlen(data)));
             strcat(tmp, data);
@@ -279,7 +278,6 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
     // If the number of bits required is greater than the number of bits in the data(char.) to be Embedded
         // Apply padding
         char newbits[8];
-        memset(newbits, '\0', sizeof(newbits));
         strcpy(newbits, bits);
         strcat(newbits, substr(paddbits,0,(nb - strlen(bits))));
         int pad = nb - strlen(bits);
@@ -287,7 +285,6 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
         char *data = newbits;
         char *bival = chartobin(val);
         char newbival[8];
-        memset(newbival, '\0', sizeof(newbival));
         if (strlen(bival)>strlen(data)) {
             char *tmp = substr(bival,0,(strlen(bival) - strlen(data)));
             strcat(tmp, data);
@@ -608,6 +605,7 @@ void handlebits(int k, int l, bitmap_t output, int rref, int gref, int bref, FIL
 // Handle embedding pixels using PVD
 void handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *fptr) {
     // For all pixels in the matrix
+#pragma omp parallel
     for (int k=i; k<i+3; k++) {
         if (k >= output.height) break;
         for (int l=j; l<j+3; l++) {
@@ -624,6 +622,13 @@ int main(int argc, char *argv[]) {
         puts("Invalid arguments!");
         return -1;
     }
+    FILE *fp;
+    fp = fopen(argv[1], "r");
+    if (fp == NULL) {
+        printf("Error reading '%s' file.\n", argv[1]);
+        return -1;
+    }
+
     srand(time(NULL));
 
     // Initialisation
@@ -665,12 +670,6 @@ restart:
     }
 
     // Get input string to be obfuscated
-    FILE *fp;
-    fp = fopen(argv[1], "r");
-    if (fp == NULL) {
-        puts("Error!");
-        return -1;
-    }
     char ch;
     int cnt = 0;
     while ((ch = fgetc(fp)) != EOF) {
@@ -697,27 +696,49 @@ restart:
     // Print total Embedding capacity
     printf("Total Embd. Capacity: %d\n", calcCapacity(capacity, lix, liy, output));
 
-    int rref, gref, bref;
+    int choice, rref, gref, bref, pixelcnt = 0, inputlen = strlen(input);
+    int *coord = (int *)calloc(inputlen * 2, sizeof(int *));
+    int divdimension = floor(((float)dimensions / 3));
+    int buffer[divdimension];
+
+#pragma omp parallel for
+    for (int i=0; i < divdimension; i++) buffer[i] = i;
+
+#pragma omp parallel for
+    for (int i=0; i < inputlen * 2; i++) {
+regen:
+       choice = rand() % divdimension;
+       if (buffer[choice] == choice) {
+           coord[i] = choice;
+           if (i%2 != 0) buffer[choice] = -1;
+       } else {
+           goto regen;
+       }
+    }
 
     // Divide pixels to [3 x 3] matrix
-#pragma omp parallel for
-    for (int i=0; i < lix*3; i+=3) {
-        for (int j=0; j < liy*3; j+=3) {
-            // Obtain pixel values of ref. pixel
-            pixel_t * pixelref = pixel_at (& output, i+1, j+1);
-            rref = pixelref->red;
-            gref = pixelref->green;
-            bref = pixelref->blue;
-            // printf("%d %d %d\n", rref, gref, bref);
+#pragma omp parallel
+    while (pixelcnt <= inputlen) {
+        // Obtain pixel values of ref. pixel
+        pixel_t * pixelref = pixel_at (& output, coord[pixelcnt]*3+1, coord[pixelcnt+1]*3+1);
+        rref = pixelref->red;
+        gref = pixelref->green;
+        bref = pixelref->blue;
+        // printf("%d %d %d\n", rref, gref, bref);
 
-            // Embed bits with input string
+        // Embed bits with input string
 #pragma omp critical
-            handle(i, j, output, rref, gref, bref, fptr);
+        {
+            handle(coord[pixelcnt], coord[pixelcnt+1], output, rref, gref, bref, fptr);
+            pixelcnt += 2;
         }
     }
 
     // Exit if Data size greater than embedding capacity
     fclose(fptr);
+    free (output.pixels);
+    free (input);
+    free (coord);
     puts("Exiting... Data size greater than embedding capacity!!");
     return -1;
 }
