@@ -550,66 +550,70 @@ int verify(bitmap_t output) {
     return 0;
 }
 
-// Handle embedding pixels using PVD
-void handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *fptr) {
+// Embed bits with randomized index
+void handlebits(int k, int l, bitmap_t output, int rref, int gref, int bref, FILE *fptr) {
     int r, g, b, rdif, gdif, bdif;
     int newr, newg, newb;
 
+    // Calculate the difference in pixel values
+    pixel_t * pixel = pixel_at (& output, k, l);
+    r = pixel->red;
+    g = pixel->green;
+    b = pixel->blue;
+    rdif = abs(r - rref);
+    gdif = abs(g - gref);
+    bdif = abs(b - bref);
+    // printf("%d %d %d, %d %d %d\n", r, g, b, rdif, gdif, bdif);
+
+    // Till embedding gets completed
+    if (!completed) {
+        newr = embedbits(k, l, 'r', classify(rdif), r, fptr);
+    }
+    if (!completed) {
+        newg = embedbits(k, l, 'g', classify(gdif), g, fptr);
+    }
+    if (!completed) {
+        newb = embedbits(k, l, 'b', classify(bdif), b, fptr);
+    }
+    // printf("%d %d %d, %d %d %d, [%d, %d]\n", r, g, b, newr, newg, newb, k, l);
+
+    // Embedding completed
+    if (completed) {
+        // Assign modified pixel values
+        pixel->red = newr;
+        pixel->green = newg;
+        pixel->blue = newb;
+
+        // Save embedded image
+        if (save_png_to_file (& output, "embedded.png")) {
+            fprintf (stderr, "Error writing file.\n");
+            exit(0);
+        }
+
+        // Close log file
+        fclose(fptr);
+
+        // Exit program
+        puts("Original image outputted to ./output.png");
+        puts("Embedded image outputted to ./embedded.png");
+        exit(0);
+    }
+
+    // Assign modified pixel values
+    pixel->red = newr;
+    pixel->green = newg;
+    pixel->blue = newb;
+}
+
+// Handle embedding pixels using PVD
+void handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *fptr) {
     // For all pixels in the matrix
     for (int k=i; k<i+3; k++) {
         if (k >= output.height) break;
         for (int l=j; l<j+3; l++) {
             if (k == i+1 && l == j+1) continue;
             if (l >= output.width) break;
-
-            // Calculate the difference in pixel values
-            pixel_t * pixel = pixel_at (& output, k, l);
-            r = pixel->red;
-            g = pixel->green;
-            b = pixel->blue;
-            rdif = abs(r - rref);
-            gdif = abs(g - gref);
-            bdif = abs(b - bref);
-            // printf("%d %d %d, %d %d %d\n", r, g, b, rdif, gdif, bdif);
-
-            // Till embedding gets completed
-            if (!completed) {
-                newr = embedbits(k, l, 'r', classify(rdif), r, fptr);
-            }
-            if (!completed) {
-                newg = embedbits(k, l, 'g', classify(gdif), g, fptr);
-            }
-            if (!completed) {
-                newb = embedbits(k, l, 'b', classify(bdif), b, fptr);
-            }
-            // printf("%d %d %d, %d %d %d, [%d, %d]\n", r, g, b, newr, newg, newb, k, l);
-
-            // Embedding completed
-            if (completed) {
-                // Assign modified pixel values
-                pixel->red = newr;
-                pixel->green = newg;
-                pixel->blue = newb;
-
-                // Save embedded image
-                if (save_png_to_file (& output, "embedded.png")) {
-                    fprintf (stderr, "Error writing file.\n");
-                    exit(0);
-                }
-
-                // Close log file
-                fclose(fptr);
-
-                // Exit program
-                puts("Original image outputted to ./output.png");
-                puts("Embedded image outputted to ./embedded.png");
-                exit(0);
-            }
-
-            // Assign modified pixel values
-            pixel->red = newr;
-            pixel->green = newg;
-            pixel->blue = newb;
+            handlebits(k, l, output, rref, gref, bref, fptr);
         }
     }
 }
