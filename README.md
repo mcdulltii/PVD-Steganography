@@ -1,5 +1,5 @@
 # C Implementation of Pixel Value Differencing based Steganography
-[![](https://img.shields.io/badge/Category-Steganography-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Language-C-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Version-1.0-E5A505?style=flat-square&color=green)]()
+[![](https://img.shields.io/badge/Category-Steganography-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Language-C-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Version-1.1-E5A505?style=flat-square&color=green)]()
 
 Reference: [Python Implementation](https://github.com/TonyJosi97/pvd_steganography)
 
@@ -11,20 +11,97 @@ As of now extraction is done using the generated log file containing data locati
 
 - libpng-dev (C PNG Library)
 - libmath (C Inbuilt Math Library)
+- openmp (C Parallelization)
 
 ## Usage: Embedding
 
-> Usage: make
+Note: Makefile uses `text` as input to C binary
+
+```shell
+$ echo 'Hello world!' > text
+$ make (icc/strip-icc/gcc/strip-gcc/parallel-gcc/secure-gcc/all-gcc) (run) (verify)
+```
 
 > Embed data Log can be found as: embedlog.log
 
 ## Usage: Extraction
 
-> Usage: python3 extract.py Embedded_Image Output_File 
+Note: Makefile uses `embedded.png` and `text` as inputs below
 
-> Eg:    python3 extract.py embedded.png cipher.txt
+```shell
+$ python3 extract.py (Embedded_Image) (Output_File) 
+```
 
-Ensure that embedlog.log is in the same directory.
+> extract.py uses embedlog.log from the same directory
+
+## Implementation
+
+1. Fractal bitmap generation
+    1. The binary uses `srand(time(NULL))` to choose a random fractal algorithm.
+    2. Randomly generate 2 of the quartenion vector directions
+    3. Use fractal algorithm to iterate bitmap pixel colours of set dimensions
+2. Check bitmap generation
+    1. Anti-alias bitmap with adjacent pixels
+    2. Verify bitmap is not generated entirely black
+3. Randomly choose 3x3 grids within bitmap to embed
+    1. Using floored division of the bitmap dimensions, generate non-repeating `(x//3, y//3)` coordinates
+    2. Use randomly chosen `(x//3, y//3) * 3` 3x3 matrix to embed bits
+
+    Example:
+    <table>
+    <tr><th>i.</th><th>ii.</th></tr>
+    <tr><td>
+
+    |1|   |&nbsp;|...|
+    |-|-|-|-|
+    |   |2|   |...|
+    |   |3|   |...|
+    |...|...|...|...|
+
+    </td><td>
+
+    |1|1|1|   |   |   |&nbsp;|&nbsp;|&nbsp;|...|
+    |-|-|-|-|-|-|-|-|-|-|
+    |1|1|1|   |   |   |   |   |   |...|
+    |1|1|1|   |   |   |   |   |   |...|
+    |   |   |   |2|2|2|   |   |   |...|
+    |   |   |   |2|2|2|   |   |   |...|
+    |   |   |   |2|2|2|   |   |   |...|
+    |   |   |   |3|3|3|   |   |   |...|
+    |   |   |   |3|3|3|   |   |   |...|
+    |   |   |   |3|3|3|   |   |   |...|
+    |...|...|...|...|...|...|...|...|...|...|
+
+    </td></tr> </table>
+
+4. Embed bits
+    1. Classify bits to determine how much to embed
+    2. Determine capacity of RGB bits can be embedded using reference to center of the 3x3 matrix
+    3. Embed bits based on chosen 3x3 matrices (or 2x2 within 3x3 matrices)
+
+    Example:
+
+    |x|x|x|   |   |   |&nbsp;|&nbsp;|&nbsp;|...|
+    |-|-|-|-|-|-|-|-|-|-|
+    |x|x|x|   |   |   |   |   |   |...|
+    |x|x|x|   |   |   |   |   |   |...|
+    |   |   |   |x|x|   |   |   |   |...|
+    |   |   |   |x|x|   |   |   |   |...|
+    |&nbsp;|   |   |   |   |   |   |   |   |...|
+    |   |   |   |x|x|x|   |   |   |...|
+    |   |   |   |x|x|x|   |   |   |...|
+    |   |   |   |x|x|x|   |   |   |...|
+    |...|...|...|...|...|...|...|...|...|...|
+
+5. Log embedded bits
+    1. Log variables (x, y)
+    2. Log RGB pixel bit used
+    3. Log embedded length and amount of padding used
+    4. Log index of input embedded
+6. Extract embedded bits
+    1. Using index of input embedded, it can determine how many bits are used for each input character
+    2. Retrieve 3x3 matrix used from (x, y), or 2x2 within 3x3 matrix
+    3. As some RGB pixels may have values smaller than the bits to embed, splice the embedded bits into its original length 
 
 ## Reading Materials
 
