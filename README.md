@@ -1,5 +1,5 @@
 # C Implementation of Pixel Value Differencing based Steganography
-[![](https://img.shields.io/badge/Category-Steganography-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Language-C-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Version-1.1-E5A505?style=flat-square&color=green)]()
+[![](https://img.shields.io/badge/Category-Steganography-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Language-C-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Version-1.2-E5A505?style=flat-square&color=green)]()
 
 Reference: [Python Implementation](https://github.com/TonyJosi97/pvd_steganography)
 
@@ -52,24 +52,24 @@ $ python3 extract.py (Embedded_Image) (Output_File)
     <tr><th>i.</th><th>ii.</th></tr>
     <tr><td>
 
-    |1|   |&nbsp;|...|
+    |1|-|-|...|
     |-|-|-|-|
-    |   |2|   |...|
-    |   |3|   |...|
+    |-|2|-|...|
+    |-|3|-|...|
     |...|...|...|...|
 
     </td><td>
 
-    |1|1|1|   |   |   |&nbsp;|&nbsp;|&nbsp;|...|
+    |1|1|1|-|-|-|-|-|-|...|
     |-|-|-|-|-|-|-|-|-|-|
-    |1|1|1|   |   |   |   |   |   |...|
-    |1|1|1|   |   |   |   |   |   |...|
-    |   |   |   |2|2|2|   |   |   |...|
-    |   |   |   |2|2|2|   |   |   |...|
-    |   |   |   |2|2|2|   |   |   |...|
-    |   |   |   |3|3|3|   |   |   |...|
-    |   |   |   |3|3|3|   |   |   |...|
-    |   |   |   |3|3|3|   |   |   |...|
+    |1|1|1|-|-|-|-|-|-|...|
+    |1|1|1|-|-|-|-|-|-|...|
+    |-|-|-|2|2|2|-|-|-|...|
+    |-|-|-|2|2|2|-|-|-|...|
+    |-|-|-|2|2|2|-|-|-|...|
+    |-|-|-|3|3|3|-|-|-|...|
+    |-|-|-|3|3|3|-|-|-|...|
+    |-|-|-|3|3|3|-|-|-|...|
     |...|...|...|...|...|...|...|...|...|...|
 
     </td></tr> </table>
@@ -81,23 +81,21 @@ $ python3 extract.py (Embedded_Image) (Output_File)
 
     Example:
 
-    |x|x|x|   |   |   |&nbsp;|&nbsp;|&nbsp;|...|
+    |x|x|x|-|-|-|-|-|-|...|
     |-|-|-|-|-|-|-|-|-|-|
-    |x|x|x|   |   |   |   |   |   |...|
-    |x|x|x|   |   |   |   |   |   |...|
-    |   |   |   |x|x|   |   |   |   |...|
-    |   |   |   |x|x|   |   |   |   |...|
-    |&nbsp;|   |   |   |   |   |   |   |   |...|
-    |   |   |   |x|x|x|   |   |   |...|
-    |   |   |   |x|x|x|   |   |   |...|
-    |   |   |   |x|x|x|   |   |   |...|
+    |x|x|x|-|-|-|-|-|-|...|
+    |x|x|x|-|-|-|-|-|-|...|
+    |-|-|-|x|x|-|-|-|-|...|
+    |-|-|-|x|x|-|-|-|-|...|
+    |-|-|-|-|-|-|-|-|-|...|
+    |-|-|-|x|x|x|-|-|-|...|
+    |-|-|-|x|x|x|-|-|-|...|
+    |-|-|-|x|x|x|-|-|-|...|
     |...|...|...|...|...|...|...|...|...|...|
 
 5. Log embedded bits
-    1. Log variables (x, y)
-    2. Log RGB pixel bit used
-    3. Log embedded length and amount of padding used
-    4. Log index of input embedded
+    1. Log variables (x, y), RGB pixel bit used, embedded length and amount of padding used, change in index of input
+    2. Log variables as concatenated binary bits to reduce logging
 6. Extract embedded bits
     1. Using index of input embedded, it can determine how many bits are used for each input character
     2. Retrieve 3x3 matrix used from (x, y), or 2x2 within 3x3 matrix
