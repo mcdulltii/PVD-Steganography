@@ -248,7 +248,44 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
     // Initialise
     int pad = 0;
     int nb = diff;
+    char *sequence = (char*)calloc(8, sizeof(char));
     // printf("%d %ld\n", nb, strlen(bits));
+
+    switch (pixel) {
+        case 'r':
+            sequence[0] = '0';
+            sequence[1] = '0';
+            break;
+        case 'g':
+            sequence[0] = '0';
+            sequence[1] = '1';
+            break;
+        case 'b':
+            sequence[0] = '1';
+            sequence[1] = '0';
+            break;
+        default:
+            puts("Error!");
+            exit(0);
+    }
+
+    switch (diff) {
+        case 2:
+            sequence[2] = '0';
+            sequence[3] = '0';
+            break;
+        case 3:
+            sequence[2] = '0';
+            sequence[3] = '1';
+            break;
+        case 4:
+            sequence[2] = '1';
+            sequence[3] = '0';
+            break;
+        default:
+            puts("Error!");
+            exit(0);
+    }
 
     // If the number of bits required is less than the number of bits in the data(char.) to be Embedded
     if (nb < strlen(bits)) {
@@ -266,13 +303,16 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
         } else {
             strcpy(newbival, data);
         }
+        sequence[4] = sequence[5] = '0';
+        sequence[6] = (charNum%2) ? '1' : '0';
         // printf("less %s %s %s %s %s\n", bits, newbits, data, bival, newbival);
 
         // Write data to log File for extraction
-        fprintf(lg, "%d %d %c %d %d %d \n", i, j, pixel, diff, pad, charNum+1);
+        fprintf(lg, "%d %d %d \n", i, j, bintochar(sequence));
 
         // Return new pixel value after embedding
         int c = bintochar(newbival);
+        free(sequence);
         return (c<0) ? 256 - c : c;
     } else {
     // If the number of bits required is greater than the number of bits in the data(char.) to be Embedded
@@ -292,11 +332,33 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
         } else {
             strcpy(newbival, data);
         }
+        switch (pad) {
+            case 0:
+                sequence[4] = '0';
+                sequence[5] = '0';
+                break;
+            case 1:
+                sequence[4] = '0';
+                sequence[5] = '1';
+                break;
+            case 2:
+                sequence[4] = '1';
+                sequence[5] = '0';
+                break;
+            case 3:
+                sequence[4] = '1';
+                sequence[5] = '1';
+                break;
+            default:
+                puts("Error!");
+                exit(0);
+        }
+        sequence[6] = (charNum%2) ? '1' : '0';
         // printf("more %s %s %s %s %s %d\n", bits, newbits, data, bival, newbival, pad);
         count += 1;
 
         // Write data to log File for extraction
-        fprintf(lg, "%d %d %c %d %d %d \n", i, j, pixel, diff, pad, charNum+1);
+        fprintf(lg, "%d %d %d \n", i, j, bintochar(sequence));
 
         // Read new char. for embedding
         // Increment the char count of embedded data
@@ -310,6 +372,7 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
 
             // Return new pixel value after embedding
             int c = bintochar(newbival);
+            free(sequence);
             return (c<0) ? 256 - c : c;
         }
 
@@ -318,6 +381,7 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg) {
 
         // Return new pixel value after embedding
         int c = bintochar(newbival);
+        free(sequence);
         return (c<0) ? 256 - c : c;
     }
 }

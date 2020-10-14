@@ -18,7 +18,7 @@ def main():
 
     # Initialisation
     pix = im.load()
-    temp = 1
+    temp = 0
     chrtr = ''
 
     while 1:
@@ -33,7 +33,10 @@ def main():
 
         # Unpack line read from log file to variables
         # Process variables
-        i, j, pixel, diff, pad, charNum = [int(i) if i not in 'rgb' else i for i in st.split()]
+        i, j, sequence = [int(i) for i in st.split()]
+        pixel, diff, pad = [i for i in map(''.join, zip(*[iter(bin(sequence)[2:].zfill(7))]*2))]
+        pixel, diff, pad = 'rgb'[int(pixel, 2)], int('234'[int(diff, 2)]), int('0123'[int(pad, 2)])
+        charNum = int(bin(sequence)[-1])
         r, g, b = pix[i, j]
 
         # Check if new charaacter in embed log is reached
