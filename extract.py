@@ -14,7 +14,7 @@ def main():
     # File Object Creations
     im = Image.open(sys.argv[1])
     outp = open(sys.argv[2],'w')
-    lg = open('embedlog.log','r')
+    lg = open('embed.log','r')
 
     # Initialisation
     pix = im.load()

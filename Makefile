@@ -1,10 +1,10 @@
 GNU = gcc
 INTEL = icc
 CSTRIP = -s
-CFLAGS = -lpng -lm
+CFLAGS = -lpng -lm -Iinclude
 CPARALLEL = -fopenmp
 CSECURE = -O1 -D_GLIBCXX_ASSERTIONS -fasynchronous-unwind-tables -fexceptions -fpie -fpic -Wl,-z,relro -Wl,-z,now -z defs -fcf-protection
-FILENAME = embed
+FILENAME = main
 TEXT = text
 
 all: gcc run verify
@@ -41,4 +41,4 @@ verify:
 		cat text
 
 clean: 
-		rm $(FILENAME) embedded.png output.png $(TEXT) embedlog.log
+		rm $(FILENAME) embedded.png output.png embed.log
