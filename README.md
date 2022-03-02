@@ -1,5 +1,5 @@
 # C Implementation of Pixel Value Differencing based Steganography
-[![](https://img.shields.io/badge/Category-Steganography-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Language-C-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Version-1.2-E5A505?style=flat-square&color=green)]()
+[![](https://img.shields.io/badge/Category-Steganography-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Language-C-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Version-1.3-E5A505?style=flat-square&color=green)]()
 
 Reference: [Python Implementation](https://github.com/TonyJosi97/pvd_steganography)
 
@@ -11,7 +11,7 @@ As of now extraction is done using the generated log file containing data locati
 
 - libpng-dev (C PNG Library)
 - libmath (C Inbuilt Math Library)
-- openmp (C Parallelization)
+- (Optional) openmp (C Parallelization)
 
 ## Usage: Embedding
 
@@ -22,7 +22,7 @@ $ echo 'Hello world!' > text
 $ make (icc/strip-icc/gcc/strip-gcc/parallel-gcc/secure-gcc/all-gcc) (run) (verify)
 ```
 
-> Embed data Log can be found as: embed.log
+> Embedded data Log can be found in: embed.log
 
 ## Usage: Extraction
 
@@ -33,6 +33,8 @@ $ python3 extract.py (Embedded_Image) (Output_File)
 ```
 
 > extract.py uses embed.log from the same directory
+
+![Embedding and Extraction Example](rsrc/example.png)
 
 ## Implementation
 
@@ -110,4 +112,3 @@ $ python3 extract.py (Embedded_Image) (Output_File)
 - [Digital Image Steganography Using Eight-Directional PVD against RS Analysis and PDH Analysis](http://downloads.hindawi.com/journals/am/2018/4847098.pdf)
 - [A Steganographic Method Based on Pixel-Value Differencing and the Perfect Square Number](http://downloads.hindawi.com/journals/jam/2013/189706.pdf)
 - [An RGB colour image steganography scheme using overlapping block-based pixel-value differencing](https://royalsocietypublishing.org/doi/10.1098/rsos.161066)
-
