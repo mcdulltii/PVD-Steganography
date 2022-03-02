@@ -22,7 +22,7 @@ $ echo 'Hello world!' > text
 $ make (icc/strip-icc/gcc/strip-gcc/parallel-gcc/secure-gcc/all-gcc) (run) (verify)
 ```
 
-> Embed data Log can be found as: embedlog.log
+> Embed data Log can be found as: embed.log
 
 ## Usage: Extraction
 
@@ -32,7 +32,7 @@ Note: Makefile uses `embedded.png` and `text` as inputs below
 $ python3 extract.py (Embedded_Image) (Output_File) 
 ```
 
-> extract.py uses embedlog.log from the same directory
+> extract.py uses embed.log from the same directory
 
 ## Implementation
 
