@@ -17,7 +17,7 @@ char *bits = "";
 
 // Obtain substring from string wrt index
 
-char *substr(char const *inp, size_t start, size_t len) { 
+char* _substr(char const *inp, size_t start, size_t len) { 
     char *ret = calloc(8, len+1);
     memcpy(ret, inp+start, len);
     ret[len]  = '\0';
@@ -41,7 +41,7 @@ char* chartobin ( char c ) {
             index = strlen(temp) - 1;
         }
     }
-    return substr(temp, index, strlen(temp) - index);
+    return _substr(temp, index, strlen(temp) - index);
 }
 
 // Converts binary string to int
@@ -52,7 +52,7 @@ int bintochar ( char* temp ) {
 
 // Classify pixels based on the difference in pixel value to the number of bits to be substituted to LSB
 
-int classify(int pvd) {
+int _classify(int pvd) {
     int nbits = 0;
     if (pvd < 16) {
         nbits = 2;
@@ -96,7 +96,7 @@ int calcCapacity(int lix, int liy, bitmap_t output) {
                     bdif = abs(b - bref);
 
                     // Cumulative capacity
-                    capacity += classify(rdif) + classify(gdif) + classify(bdif);
+                    capacity += _classify(rdif) + _classify(gdif) + _classify(bdif);
                 }
             }
         }
@@ -108,7 +108,7 @@ int calcCapacity(int lix, int liy, bitmap_t output) {
 
 // Function to embed data to pixel
 
-int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg, char* input) {
+int _embed_bits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg, char* input) {
     // Initialise
     int pad = 0;
     int nb = diff;
@@ -154,14 +154,14 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg, char
     // If the number of bits required is less than the number of bits in the data(char.) to be Embedded
     if (nb < strlen(bits)) {
         // Initialise
-        char *newbits = substr(bits,0,nb);
-        bits = substr(bits,nb,strlen(bits)-nb);
+        char *newbits = _substr(bits,0,nb);
+        bits = _substr(bits,nb,strlen(bits)-nb);
         int val = colorpixel;
         char *data = newbits;
         char *bival = chartobin(val);
         char newbival[8];
         if (strlen(bival)>strlen(data)) {
-            char *tmp = substr(bival,0,(strlen(bival) - strlen(data)));
+            char *tmp = _substr(bival,0,(strlen(bival) - strlen(data)));
             strcat(tmp, data);
             strcpy(newbival, tmp);
         } else {
@@ -183,14 +183,14 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg, char
         // Apply padding
         char newbits[8];
         strcpy(newbits, bits);
-        strcat(newbits, substr(paddbits,0,(nb - strlen(bits))));
+        strcat(newbits, _substr(paddbits,0,(nb - strlen(bits))));
         int pad = nb - strlen(bits);
         int val = colorpixel;
         char *data = newbits;
         char *bival = chartobin(val);
         char newbival[8];
         if (strlen(bival)>strlen(data)) {
-            char *tmp = substr(bival,0,(strlen(bival) - strlen(data)));
+            char *tmp = _substr(bival,0,(strlen(bival) - strlen(data)));
             strcat(tmp, data);
             strcpy(newbival, tmp);
         } else {
@@ -250,71 +250,8 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg, char
     }
 }
 
-/* Takes adjacent pixels and average their RGB values for smoother outputs */
-
-bitmap_t antialias(bitmap_t temp) {
-    // Create output bitmap
-    bitmap_t output;
-    output.width = temp.width;
-    output.height = temp.height;
-
-    output.pixels = calloc (output.width * output.height, sizeof (pixel_t));
-
-    if (! output.pixels) {
-        puts("Error in allocation!");
-        exit(1);
-    }
-
-    // Create temporary bitmap for edge cases
-    pixel_t * black = (pixel_t*)malloc(sizeof(pixel_t*));
-    black->red = 0; black->blue = 0; black->green = 0;
-
-    // Check if edge case
-    int is_edge = 0;
-
-#pragma omp parallel for private(is_edge)
-    for (int x = 0; x < output.width; x++) {
-        for (int y = 0; y < output.height; y++) {
-            // Solve for edge cases
-            pixel_t * pixelxp = (x==output.width-1) ? black : pixel_at (& temp, x+1, y);
-            pixel_t * pixelxm = (x==0) ? black : pixel_at (& temp, x-1, y);
-            pixel_t * pixelyp = (y==output.height-1) ? black : pixel_at (& temp, x, y+1);
-            pixel_t * pixelym = (y==0) ? black : pixel_at (& temp, x, y-1);
-            pixel_t * pixel = pixel_at (& output, x, y);
-            // Average for edge cases
-#pragma omp critical
-            {
-                if (x==output.width-1||x==0||y==output.height-1||y==0) is_edge = 1;
-                pixel->red = (pixelxp->red + pixelxm->red + pixelyp->red + pixelym->red)/((is_edge) ? 3 : 4);
-                pixel->blue = (pixelxp->blue + pixelxm->blue + pixelyp->blue + pixelym->blue)/((is_edge) ? 3 : 4);
-                pixel->green = (pixelxp->green + pixelxm->green + pixelyp->green + pixelym->green)/((is_edge) ? 3 : 4);
-                is_edge = 0;
-            }
-        }
-    }
-
-    free(black);
-
-    return output;
-}
-
-/* Verify generated fractal bitmap is coloured */
-
-int verify(bitmap_t output) {
-    int sum = 0;
-    for (int x = 0; x < output.width; x++) {
-        for (int y = 0; y < output.height; y++) {
-            pixel_t * pixel = pixel_at (& output, x, y);
-            sum += pixel->red + pixel->blue + pixel->green;
-            if (sum > 0) return 1;
-        }
-    }
-    // Will return 0 if entire bitmap is black
-    return 0;
-}
-
 // Embed bits with randomized index
-int handlebits(int k, int l, bitmap_t output, int rref, int gref, int bref, FILE *fptr, char* input) {
+int _handle_bits(int k, int l, bitmap_t output, int rref, int gref, int bref, FILE *fptr, char* input) {
     int r, g, b, rdif, gdif, bdif;
     int newr, newg, newb;
 
@@ -330,13 +267,13 @@ int handlebits(int k, int l, bitmap_t output, int rref, int gref, int bref, FILE
 
     // Till embedding gets completed
     if (!completed) {
-        newr = embedbits(k, l, 'r', classify(rdif), r, fptr, input);
+        newr = _embed_bits(k, l, 'r', _classify(rdif), r, fptr, input);
     }
     if (!completed) {
-        newg = embedbits(k, l, 'g', classify(gdif), g, fptr, input);
+        newg = _embed_bits(k, l, 'g', _classify(gdif), g, fptr, input);
     }
     if (!completed) {
-        newb = embedbits(k, l, 'b', classify(bdif), b, fptr, input);
+        newb = _embed_bits(k, l, 'b', _classify(bdif), b, fptr, input);
     }
     // printf("%d %d %d, %d %d %d, [%d, %d]\n", r, g, b, newr, newg, newb, k, l);
 
@@ -368,6 +305,16 @@ int handlebits(int k, int l, bitmap_t output, int rref, int gref, int bref, FILE
 
 // Handle embedding pixels using PVD
 int handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *fptr, char* input) {
+    /* Export handle to embed bits on pixel
+    int i           - x coordinate of output bitmap
+    int j           - y coordinate of output bitmap
+    bitmap_t output - output bitmap to embed string on
+    int rref        - red component of reference pixel
+    int gref        - green component of reference pixel
+    int bref        - blue component of reference pixel
+    FILE *fptr      - logging file pointer
+    char *input     - input string to embed
+    */
     int handlebits_ret;
     // For all pixels in the matrix
 #pragma omp parallel
@@ -376,7 +323,7 @@ int handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *fp
         for (int l=j; l<j+3; l++) {
             if (k == i+1 && l == j+1) continue;
             if (l >= output.width) break;
-            handlebits_ret = handlebits(k, l, output, rref, gref, bref, fptr, input);
+            handlebits_ret = _handle_bits(k, l, output, rref, gref, bref, fptr, input);
 
             // Check handlebits return value
             if (handlebits_ret == 0)
