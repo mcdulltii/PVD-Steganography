@@ -11,7 +11,6 @@ bitmap_t output;
 FILE *fptr, *fp;
 
 int dimensions = 800;
-int capacity = 0;
 
 
 bitmap_t initialize() {
@@ -66,6 +65,8 @@ restart:
     if (save_png_to_file (& output, "output.png")) {
         fprintf (stderr, "Error writing file.\n");
         return -1;
+    } else {
+        puts("Original image outputted to ./output.png");
     }
 
     return 0;
@@ -85,7 +86,7 @@ void read_input() {
 
 void embed_string() {
     // Initialisation
-    int choice, rref, gref, bref, pixelcnt = 0, inputlen = strlen(input);
+    int handle_ret, choice, rref, gref, bref, pixelcnt = 0, inputlen = strlen(input);
     int *coord = (int *)calloc(inputlen * 2, sizeof(int *));
     int divdimension = floor(((float)dimensions / 3));
     int buffer[divdimension];
@@ -120,7 +121,9 @@ regen:
         // Embed bits with input string
 #pragma omp critical
         {
-            handle(coord[pixelcnt], coord[pixelcnt+1], output, rref, gref, bref, fptr, input);
+            handle_ret = handle(coord[pixelcnt], coord[pixelcnt+1], output, rref, gref, bref, fptr, input);
+            if (handle_ret == 0)
+                return;
             pixelcnt += 2;
         }
     }
@@ -146,7 +149,7 @@ int main(int argc, char *argv[]) {
 
     if (generate_fractal_img() == -1) {
         puts("Error generating image!");
-        exit(0);
+        exit(1);
     }
 
 
@@ -158,8 +161,8 @@ int main(int argc, char *argv[]) {
     // Convert first char to binary string
     char binval = input[0];
     if (!binval) {
-        puts("Error!");
-        exit(0);
+        puts("Error writing char!");
+        exit(1);
     }
 
     // Set bits global variable in embed.h
@@ -171,18 +174,17 @@ int main(int argc, char *argv[]) {
     int liy = floor((float)output.width/3);
 
     // Print total Embedding capacity
-    printf("Total Embd. Capacity: %d\n", calcCapacity(capacity, lix, liy, output));
+    printf("Total Embd. Capacity: %d\n", calcCapacity(lix, liy, output));
 
 
     /* Steganography embedding */
 
-    // Will exit in handlebits() when fully embedded
+    // Embed string into output image
     embed_string();
 
-    // Data size if greater than embedding capacity
+    // Free pointers
     fclose(fptr);
     free (output.pixels);
     free (input);
-    puts("Exiting... Data size greater than embedding capacity!!");
-    return -1;
+    return 0;
 }

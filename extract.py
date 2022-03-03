@@ -1,3 +1,4 @@
+#! /usr/bin/python3
 from PIL import Image
 import sys, os
 
@@ -32,7 +33,7 @@ def main():
             break
 
         # Unpack line read from log file to variables
-        # Process variables
+        # Process variables (Refer to embed.h for logging format)
         i, j, sequence = [int(i) for i in st.split()]
         pixel, diff, pad = [i for i in map(''.join, zip(*[iter(bin(sequence)[2:].zfill(7))]*2))]
         pixel, diff, pad = 'rgb'[int(pixel, 2)], int('234'[int(diff, 2)]), int('0123'[int(pad, 2)])

@@ -1,5 +1,5 @@
 # C Implementation of Pixel Value Differencing based Steganography
-[![](https://img.shields.io/badge/Category-Steganography-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Language-C-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Version-1.3-E5A505?style=flat-square&color=green)]()
+[![](https://img.shields.io/badge/Category-Steganography-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Language-C-E5A505?style=flat-square)]() [![](https://img.shields.io/badge/Version-1.4-E5A505?style=flat-square&color=green)]()
 
 Reference: [Python Implementation](https://github.com/TonyJosi97/pvd_steganography)
 
@@ -12,6 +12,7 @@ As of now extraction is done using the generated log file containing data locati
 - libpng-dev (C PNG Library)
 - libmath (C Inbuilt Math Library)
 - (Optional) openmp (C Parallelization)
+- PIL (Python2/3)
 
 ## Usage: Embedding
 
@@ -102,6 +103,11 @@ $ python3 extract.py (Embedded_Image) (Output_File)
     1. Using index of input embedded, it can determine how many bits are used for each input character
     2. Retrieve 3x3 matrix used from (x, y), or 2x2 within 3x3 matrix
     3. As some RGB pixels may have values smaller than the bits to embed, splice the embedded bits into its original length 
+
+## Known issues (Might not fix due to out of scope)
+
+- No check for whether text string exceeds embedding capacity
+- Long text strings just below embedding capacity might get corrupted in the process
 
 ## Reading Materials
 

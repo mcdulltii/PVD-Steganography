@@ -66,8 +66,8 @@ int classify(int pvd) {
 
 // Calculate embedding capacity of the given cover image
 
-int calcCapacity(int capacity, int lix, int liy, bitmap_t output) {
-    int r, g, b, rref, gref, bref, rdif, gdif, bdif;
+int calcCapacity(int lix, int liy, bitmap_t output) {
+    int r, g, b, rref, gref, bref, rdif, gdif, bdif, capacity = 0;
 
     // Divide pixels to [3 x 3] matrix
 #pragma omp parallel for
@@ -130,7 +130,7 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg, char
             break;
         default:
             puts("Invalid pixel argument!");
-            exit(0);
+            exit(1);
     }
 
     switch (diff) {
@@ -148,7 +148,7 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg, char
             break;
         default:
             puts("Invalid pixel argument!");
-            exit(0);
+            exit(1);
     }
 
     // If the number of bits required is less than the number of bits in the data(char.) to be Embedded
@@ -215,7 +215,7 @@ int embedbits(int i, int j, char pixel, int diff, int colorpixel, FILE *lg, char
                 break;
             default:
                 puts("Invalid padding argument!");
-                exit(0);
+                exit(1);
         }
         sequence[6] = (charNum%2) ? '1' : '0';
         // printf("more %s %s %s %s %s %d\n", bits, newbits, data, bival, newbival, pad);
@@ -262,7 +262,7 @@ bitmap_t antialias(bitmap_t temp) {
 
     if (! output.pixels) {
         puts("Error in allocation!");
-        exit(0);
+        exit(1);
     }
 
     // Create temporary bitmap for edge cases
@@ -314,7 +314,7 @@ int verify(bitmap_t output) {
 }
 
 // Embed bits with randomized index
-void handlebits(int k, int l, bitmap_t output, int rref, int gref, int bref, FILE *fptr, char* input) {
+int handlebits(int k, int l, bitmap_t output, int rref, int gref, int bref, FILE *fptr, char* input) {
     int r, g, b, rdif, gdif, bdif;
     int newr, newg, newb;
 
@@ -350,26 +350,25 @@ void handlebits(int k, int l, bitmap_t output, int rref, int gref, int bref, FIL
         // Save embedded image
         if (save_png_to_file (& output, "embedded.png")) {
             fprintf (stderr, "Error writing file.\n");
-            exit(0);
+            exit(1);
+        } else {
+            puts("Embedded image outputted to ./embedded.png");
         }
 
-        // Close log file
-        fclose(fptr);
-
         // Exit program
-        puts("Original image outputted to ./output.png");
-        puts("Embedded image outputted to ./embedded.png");
-        exit(0);
+        return 0;
     }
 
     // Assign modified pixel values
     pixel->red = newr;
     pixel->green = newg;
     pixel->blue = newb;
+    return 1;
 }
 
 // Handle embedding pixels using PVD
-void handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *fptr, char* input) {
+int handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *fptr, char* input) {
+    int handlebits_ret;
     // For all pixels in the matrix
 #pragma omp parallel
     for (int k=i; k<i+3; k++) {
@@ -377,7 +376,11 @@ void handle(int i, int j, bitmap_t output, int rref, int gref, int bref, FILE *f
         for (int l=j; l<j+3; l++) {
             if (k == i+1 && l == j+1) continue;
             if (l >= output.width) break;
-            handlebits(k, l, output, rref, gref, bref, fptr, input);
+            handlebits_ret = handlebits(k, l, output, rref, gref, bref, fptr, input);
+
+            // Check handlebits return value
+            if (handlebits_ret == 0)
+                return handlebits_ret;
         }
     }
 }

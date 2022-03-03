@@ -122,7 +122,7 @@ bitmap_t fractal(bitmap_t output, int choice) {
                     break;
                 default:
                     puts("Invalid fractal argument!");
-                    exit(0);
+                    exit(1);
             }
 
             pixel_t * pixel = pixel_at (& output, x, y);
@@ -157,7 +157,7 @@ bitmap_t fractal(bitmap_t output, int choice) {
                     break;
                 default:
                     puts("Invalid fractal argument!");
-                    exit(0);
+                    exit(1);
             }
         }
     }
