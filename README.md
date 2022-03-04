@@ -35,7 +35,11 @@ $ python3 extract.py (Embedded_Image) (Output_File)
 
 > extract.py uses embed.log from the same directory
 
+## Examples
+
 ![Embedding and Extraction Example](rsrc/example.png)
+
+![Lena Example](rsrc/comparison_hist.png)
 
 ## Implementation
 
